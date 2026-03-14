@@ -1,0 +1,101 @@
+// ===== 引脚定义 =====
+// ===== 引脚定义 =====
+const int workLed = 9;     // 工作LED
+const int restLed = 10;    // 休息LED
+const int buzzer = 11;     // 蜂鸣器
+const int startButton = 2; // 启动按钮
+
+const int workPot = A1;    // 工作时间电位器
+const int restPot = A2;    // 休息时间电位器
+
+
+// ===== 时间档位（秒）=====
+int timeTable[5] = {5, 10, 15, 20, 25};
+
+
+// ===== 变量 =====
+bool started = false;
+unsigned long workTime;
+unsigned long restTime;
+
+
+// ===== 初始化 =====
+void setup() {
+
+  pinMode(workLed, OUTPUT);
+  pinMode(restLed, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+
+  pinMode(startButton, INPUT_PULLUP);
+
+}
+
+
+// ===== 主循环 =====
+void loop() {
+
+  // 等待按键启动
+  if (!started) {
+
+    if (digitalRead(startButton) == LOW) {
+      started = true;
+      delay(300);  // 按键防抖
+    }
+
+    return;
+  }
+
+  // ===== 读取电位器 =====
+  int workValue = analogRead(workPot);
+  int restValue = analogRead(restPot);
+
+  // ===== 转换为档位 =====
+  int workLevel = workValue / 205;
+  int restLevel = restValue / 205;
+
+  if (workLevel > 4) workLevel = 4;
+  if (restLevel > 4) restLevel = 4;
+
+  // ===== 查表得到时间 =====
+  int workSec = timeTable[workLevel];
+  int restSec = timeTable[restLevel];
+
+  // 转换为毫秒
+  workTime = workSec * 1000;
+  restTime = restSec * 1000;
+
+
+  // ===== 工作阶段 =====
+  digitalWrite(workLed, HIGH);
+  digitalWrite(restLed, LOW);
+
+  delay(workTime);
+
+  beep();
+
+
+  // ===== 休息阶段 =====
+  digitalWrite(workLed, LOW);
+  digitalWrite(restLed, HIGH);
+
+  delay(restTime);
+
+  beep();
+
+}
+
+
+// ===== 蜂鸣器提示 =====
+void beep() {
+
+  for (int i = 0; i < 3; i++) {
+
+    digitalWrite(buzzer, HIGH);
+    delay(200);
+
+    digitalWrite(buzzer, LOW);
+    delay(200);
+
+  }
+
+}
